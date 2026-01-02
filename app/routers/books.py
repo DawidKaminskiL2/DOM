@@ -33,3 +33,13 @@ def get_book(book_id: int, db: Session = Depends(get_db)):
     if book is None:
         raise HTTPException(status_code=404, detail="Book not found")
     return book
+
+@router.delete("/{book_id}")
+def delete_book(book_id: int, db: Session = Depends(get_db)):
+    book = db.query(models.Book).filter(models.Book.id == book_id).first()
+    if book is None:
+        raise HTTPException(status_code=404, detail="Book not found")
+    db.delete(book)
+    db.commit()
+    return {"message": "Book deleted successfully"}
+
