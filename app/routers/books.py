@@ -1,3 +1,4 @@
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -37,23 +38,20 @@ def list_books(db: Session = Depends(get_db)):
     return db.query(models.Book).all()
 
 
+@router.post("/", response_model=schemas.Book)
+def create_book(book: schemas.BookCreate, db: Session = Depends(get_db)):
+    obj = models.Book(**book.dict())
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
 @router.get("/{book_id}", response_model=schemas.Book)
 def get_book(book_id: int, db: Session = Depends(get_db)):
     book = db.query(models.Book).filter(models.Book.id == book_id).first()
     if book is None:
         raise HTTPException(status_code=404, detail="Book not found")
     return book
-
-
-
-@router.post("/", response_model=schemas.Book)
-def create_book(book: schemas.BookCreate, db: Session = Depends(get_db), username: str = Depends(get_current_username)):
-    obj = models.Book(title=book.title, author=book.author, description=book.description, year=book.year)
-    db.add(obj)
-    db.commit()
-    db.refresh(obj)
-    return obj
-
 
 @router.delete("/{book_id}")
 def delete_book(book_id: int, db: Session = Depends(get_db), username: str = Depends(get_current_username)):
@@ -82,3 +80,4 @@ def update_book(book_id: int, book_update: schemas.BookCreate, db: Session = Dep
     db.refresh(db_book)
 
     return db_book
+
