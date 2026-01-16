@@ -27,6 +27,8 @@ jobs:
       - name: Run Tests
         env:
           PYTHONPATH: .
+          DATABASE_URL: "sqlite:///./test.db"
+          SECRET_KEY: "sssssssssssss-test-key"
         run: pytest
 
       - name: Build Docker Image
