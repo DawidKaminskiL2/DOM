@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app-backend:
-    build: .
+    image: dawidkaminski/projekt-backend:v1.0.5
     container_name: projekt-backend
     ports:
       - "8000:8000"
@@ -29,7 +29,6 @@ services:
       timeout: 5s
       retries: 5
 
-
   prometheus:
     image: prom/prometheus
     container_name: projekt-prometheus
@@ -46,8 +45,11 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
+
   adminer:
     image: adminer
     container_name: projekt-adminer
@@ -57,20 +59,14 @@ services:
       - db
 
   app-frontend:
-    build:
-      context: ./library-canvas-main
-      dockerfile: Dockerfile
+    image: dawidkaminski/projekt-frontend:v1.0.5
     container_name: projekt-frontend
     ports:
       - "80:8080"
-    volumes:
-      - ./library-canvas-main:/app
-      - /app/node_modules
 
     depends_on:
       - app-backend
 
 volumes:
   postgres_data:
-
-
+  grafana_data:
