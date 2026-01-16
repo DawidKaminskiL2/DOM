@@ -3,18 +3,20 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
 from app.main import app
 from app.database import Base
 from app import models
 from app.routers.books import get_db
 
 # 1. Konfiguracja testowej bazy danych
+# StaticPool jest konieczny przy :memory:, aby tabela nie znikała
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
-    poolclass=StaticPool 
+    poolclass=StaticPool
 )
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -39,8 +41,10 @@ AUTH_DATA = (AUTH_USERNAME, AUTH_PASSWORD)
 # 3. Fixture bazy danych
 @pytest.fixture(autouse=True)
 def setup_db():
+    # A. Tworzymy tabele
     Base.metadata.create_all(bind=engine)
     
+    # B. Tworzymy użytkownika (BEZ HASZOWANIA - CZYSTY TEKST)
     db = TestingSessionLocal()
     try:
         user = models.User(
@@ -53,8 +57,12 @@ def setup_db():
         print(f"DEBUG: Błąd podczas tworzenia admina: {e}")
     finally:
         db.close()
+
     yield
+
+    # C. Sprzątamy po testach
     Base.metadata.drop_all(bind=engine)
+
 
 # --- TESTY ---
 
