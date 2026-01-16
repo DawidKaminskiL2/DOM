@@ -41,3 +41,21 @@ jobs:
             dawidkaminski/projekt-frontend:latest
             dawidkaminski/projekt-frontend:${{ github.ref_name }}
 
+  deploy:
+    needs: build-and-push  
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/apps/DOM
+            git fetch --all
+            git checkout main
+            git pull
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
