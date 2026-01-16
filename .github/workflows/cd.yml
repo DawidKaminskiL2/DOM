@@ -21,13 +21,22 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
+      # --- BACKEND ---
+      - name: Build and push Backend
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: .   
           push: true
-          
           tags: |
             dawidkaminski/projekt-backend:latest
             dawidkaminski/projekt-backend:${{ github.ref_name }}
 
+      # --- FRONTEND ---
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            dawidkaminski/projekt-frontend:latest
+            dawidkaminski/projekt-frontend:${{ github.ref_name }}
