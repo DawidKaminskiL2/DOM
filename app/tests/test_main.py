@@ -2,21 +2,25 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from passlib.context import CryptContext
-
+from sqlalchemy.pool import StaticPool
 from app.main import app
 from app.database import Base
 from app import models
 from app.routers.books import get_db
 
 # 1. Konfiguracja testowej bazy danych
-# Używamy :memory: dla szybkości i izolacji
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool 
 )
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Konfiguracja haszowania
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # 2. Nadpisanie zależności bazy danych
 def override_get_db():
@@ -38,10 +42,8 @@ AUTH_DATA = (AUTH_USERNAME, AUTH_PASSWORD)
 # 3. Fixture bazy danych
 @pytest.fixture(autouse=True)
 def setup_db():
-    # A. Tworzymy tabele
     Base.metadata.create_all(bind=engine)
     
-    # B. Tworzymy użytkownika (z haszowaniem hasła)
     db = TestingSessionLocal()
     try:
         user = models.User(
@@ -54,10 +56,7 @@ def setup_db():
         print(f"DEBUG: Błąd podczas tworzenia admina: {e}")
     finally:
         db.close()
-
     yield
-
-    # C. Sprzątamy po testach
     Base.metadata.drop_all(bind=engine)
 
 # --- TESTY ---
