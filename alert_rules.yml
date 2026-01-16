@@ -1,10 +1,10 @@
 groups:
   - name: AppAlerts
-  rules:
-    - alert: HighTraffic
-    expr: rate(http_requests_total[1m]) > 5
-    for: 10s
-    labels:
-      severity: warning
-    annotations:
-      summary: "Duży ruch w aplikacji!"
+    rules:
+      - alert: HighTraffic
+      expr: rate(http_requests_total[1m]) > 5
+      for: 10s
+      labels:
+        severity: warning
+      annotations:
+        summary: "Duży ruch w aplikacji!"
