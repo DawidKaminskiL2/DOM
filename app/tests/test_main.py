@@ -49,7 +49,6 @@ def test_create_book():
     assert "id" in data
 
 def test_read_books():
-    # 1. Dodajemy książkę
     create_res = client.post(
         "/books/", 
         json={"title": "B1", "author": "A1", "year": 2020}, 
@@ -57,7 +56,6 @@ def test_read_books():
     )
     assert create_res.status_code in [200, 201]
 
-    # 2. Pobieramy listę
     response = client.get("/books/")
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -71,9 +69,9 @@ def test_update_book():
     )
     book_id = create_res.json()["id"]
 
-    # 2. Edytujemy
+    # 2. Edytujemy (Z UKOŚNIKIEM)
     response = client.put(
-        f"/books/{book_id}",
+        f"/books/{book_id}/",  # 👈 To jest kluczowe
         json={"title": "New Title", "author": "Old Author", "year": 2000},
         auth=AUTH_DATA
     )
@@ -89,10 +87,10 @@ def test_delete_book():
     )
     book_id = create_res.json()["id"]
 
-    # 2. Usuwamy (DELETE z AUTH)
-    response = client.delete(f"/books/{book_id}", auth=AUTH_DATA)
+    # 2. Usuwamy (Z UKOŚNIKIEM)
+    response = client.delete(f"/books/{book_id}/", auth=AUTH_DATA) # 👈 I tutaj
     assert response.status_code in [200, 204]
 
     # Sprawdzenie czy usunięto
-    get_res = client.get(f"/books/{book_id}")
+    get_res = client.get(f"/books/{book_id}/")
     assert get_res.status_code == 404
