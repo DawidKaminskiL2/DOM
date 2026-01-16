@@ -47,6 +47,29 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - prometheus
+  adminer:
+    image: adminer
+    container_name: projekt-adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+  app-frontend:
+    build:
+      context: ./library-canvas-main
+      dockerfile: Dockerfile
+    container_name: projekt-frontend
+    ports:
+      - "80:8080"
+    volumes:
+      - ./library-canvas-main:/app
+      - /app/node_modules
+
+    depends_on:
+      - app-backend
 
 volumes:
   postgres_data:
+
+
