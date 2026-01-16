@@ -19,9 +19,6 @@ engine = create_engine(
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Konfiguracja haszowania
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # 2. Nadpisanie zależności bazy danych
 def override_get_db():
     try:
