@@ -41,10 +41,7 @@ def setup_db():
     
     db = TestingSessionLocal()
     try:
-            user = models.User(
-            username=AUTH_USERNAME,         
-            password_hash=AUTH_PASSWORD
-        )
+        user = models.User(username=AUTH_USERNAME, password_hash=AUTH_PASSWORD)
         db.add(user)
         db.commit()
     except Exception as e:
