@@ -26,7 +26,8 @@ jobs:
         with:
           context: .
           push: true
-          # ZMIEŃ PONIŻEJ 'twoj-login-dockerhub' NA SWÓJ LOGIN!
+          
           tags: |
-            twoj-login-dockerhub/projekt-backend:latest
-            twoj-login-dockerhub/projekt-backend:${{ github.ref_name }}
+            dawidkaminski/projekt-backend:latest
+            dawidkaminski/projekt-backend:${{ github.ref_name }}
+
