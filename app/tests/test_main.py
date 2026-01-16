@@ -10,7 +10,7 @@ from app.database import Base
 from app import models
 from app.routers.books import get_db
 
-# 1. Konfiguracja bazy (StaticPool naprawia błąd "no such table")
+# 1. Konfiguracja bazy
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
@@ -20,10 +20,10 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Konfiguracja haszowania (musi być, bo app/routers/books.py tego używa)
+# Konfiguracja haszowania
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# 2. Override
+
 def override_get_db():
     try:
         db = TestingSessionLocal()
@@ -39,14 +39,12 @@ AUTH_USERNAME = "admin"
 AUTH_PASSWORD = "secret"
 AUTH_DATA = (AUTH_USERNAME, AUTH_PASSWORD)
 
-# 3. Fixture
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
     
     db = TestingSessionLocal()
     try:
-        # Musimy zrobić hash, bo inaczej router wyrzuci UnknownHashError
         hashed_password = pwd_context.hash(AUTH_PASSWORD)
         
         user = models.User(
