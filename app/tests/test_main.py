@@ -34,7 +34,22 @@ AUTH_DATA = ("admin", "secret")
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        user = models.User(
+            username=AUTH_USERNAME,         
+            password_hash=AUTH_PASSWORD
+        )
+        db.add(user)
+        db.commit()
+    except Exception as e:
+        print(f"DEBUG: Błąd podczas tworzenia admina: {e}")
+    finally:
+        db.close()
+
     yield
+
+    # C. Sprzątamy po testach
     Base.metadata.drop_all(bind=engine)
 
 def test_create_book():
@@ -69,9 +84,9 @@ def test_update_book():
     )
     book_id = create_res.json()["id"]
 
-    # 2. Edytujemy (Z UKOŚNIKIEM)
+    # 2. Edytujemy 
     response = client.put(
-        f"/books/{book_id}/",  # 👈 To jest kluczowe
+        f"/books/{book_id}/", 
         json={"title": "New Title", "author": "Old Author", "year": 2000},
         auth=AUTH_DATA
     )
@@ -87,8 +102,8 @@ def test_delete_book():
     )
     book_id = create_res.json()["id"]
 
-    # 2. Usuwamy (Z UKOŚNIKIEM)
-    response = client.delete(f"/books/{book_id}/", auth=AUTH_DATA) # 👈 I tutaj
+    # 2. Usuwamy 
+    response = client.delete(f"/books/{book_id}/", auth=AUTH_DATA) 
     assert response.status_code in [200, 204]
 
     # Sprawdzenie czy usunięto
