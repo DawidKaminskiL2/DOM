@@ -29,6 +29,8 @@ jobs:
           PYTHONPATH: .
           DATABASE_URL: "sqlite:///./test.db"
           SECRET_KEY: "sssssssssssss-test-key"
+          ADMIN_USER: "admin"
+          ADMIN_PASSWORD: "secret"
         run: pytest
 
       - name: Build Docker Image
