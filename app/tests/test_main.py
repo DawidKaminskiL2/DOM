@@ -8,8 +8,7 @@ from app import models
 from app.routers.books import get_db
 
 # 1. Konfiguracja testowej bazy danych
-# Używamy :memory: dla szybkości i izolacji (unikamy problemów z plikami na dysku)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -41,17 +40,18 @@ def setup_db():
     
     db = TestingSessionLocal()
     try:
-        user = models.User(username=AUTH_USERNAME, password_hash=AUTH_PASSWORD)
+            user = models.User(
+            username=AUTH_USERNAME,         
+            password_hash=AUTH_PASSWORD
+        )
         db.add(user)
         db.commit()
     except Exception as e:
         print(f"DEBUG: Błąd podczas tworzenia admina: {e}")
     finally:
         db.close()
-
     yield
 
-    # C. Sprzątamy po testach
     Base.metadata.drop_all(bind=engine)
 
 def test_create_book():
