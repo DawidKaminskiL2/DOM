@@ -73,7 +73,7 @@ def test_update_book():
 
     # 2. Edytujemy
     response = client.put(
-        f"/books/{book_id}/",
+        f"/books/{book_id}",
         json={"title": "New Title", "author": "Old Author", "year": 2000},
         auth=AUTH_DATA
     )
@@ -90,9 +90,9 @@ def test_delete_book():
     book_id = create_res.json()["id"]
 
     # 2. Usuwamy (DELETE z AUTH)
-    response = client.delete(f"/books/{book_id}/", auth=AUTH_DATA)
+    response = client.delete(f"/books/{book_id}", auth=AUTH_DATA)
     assert response.status_code in [200, 204]
 
     # Sprawdzenie czy usunięto
-    get_res = client.get(f"/books/{book_id}/")
+    get_res = client.get(f"/books/{book_id}")
     assert get_res.status_code == 404
