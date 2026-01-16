@@ -35,8 +35,9 @@ jobs:
       - name: Build and push Frontend
         uses: docker/build-push-action@v4
         with:
-          context: ./frontend
+          context: ./library-canvas-main
           push: true
           tags: |
             dawidkaminski/projekt-frontend:latest
             dawidkaminski/projekt-frontend:${{ github.ref_name }}
+
