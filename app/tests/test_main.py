@@ -26,7 +26,7 @@ app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
-# Dane do logowania (zakładam, że takie są poprawne na podstawie Twojego kodu)
+# Dane do logowania
 AUTH_DATA = ("admin", "secret")
 
 # 3. Fixture bazy danych
@@ -36,30 +36,27 @@ def setup_db():
     yield
     Base.metadata.drop_all(bind=engine)
 
-# --- POPRAWIONE TESTY ---
-
 def test_create_book():
     response = client.post(
         "/books/",
         json={"title": "Test Book", "author": "Tester", "year": 2024},
-        auth=AUTH_DATA  # Używamy auth
+        auth=AUTH_DATA 
     )
-    # Uwaga: Czasami przy tworzeniu zwraca się 201 Created, sprawdź swoją implementację
     assert response.status_code in [200, 201] 
     data = response.json()
     assert data["title"] == "Test Book"
     assert "id" in data
 
 def test_read_books():
-    # 1. Dodajemy książkę (z AUTH i kompletem danych)
+    # 1. Dodajemy książkę
     create_res = client.post(
         "/books/", 
         json={"title": "B1", "author": "A1", "year": 2020}, 
         auth=AUTH_DATA
     )
-    assert create_res.status_code in [200, 201] # Upewniamy się, że dodanie się udał
+    assert create_res.status_code in [200, 201]
 
-    # 2. Pobieramy listę (zazwyczaj GET nie wymaga auth, ale jeśli tak - dodaj go)
+    # 2. Pobieramy list
     response = client.get("/books/")
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -73,7 +70,7 @@ def test_update_book():
     )
     book_id = create_res.json()["id"]
 
-    # 2. Edytujemy (PUT z AUTH)
+    # 2. Edytujemy 
     response = client.put(
         f"/books/{book_id}",
         json={"title": "New Title", "author": "Old Author", "year": 2000},
@@ -93,8 +90,7 @@ def test_delete_book():
 
     # 2. Usuwamy (DELETE z AUTH)
     response = client.delete(f"/books/{book_id}", auth=AUTH_DATA)
-    assert response.status_code in [200, 204] # 204 to często standard dla delete
+    assert response.status_code in [200, 204]
 
-    # 3. Sprawdzamy czy zniknęła
     get_res = client.get(f"/books/{book_id}")
     assert get_res.status_code == 404
