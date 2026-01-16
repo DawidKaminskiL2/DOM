@@ -3,14 +3,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from passlib.context import CryptContext
 
 from app.main import app
 from app.database import Base
 from app import models
 from app.routers.books import get_db
 
-# 1. Konfiguracja testowej bazy danych
-# StaticPool jest konieczny przy :memory:, aby tabela nie znikała
+# 1. Konfiguracja bazy (StaticPool naprawia błąd "no such table")
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
@@ -18,10 +18,12 @@ engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool
 )
-
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# 2. Nadpisanie zależności bazy danych
+# Konfiguracja haszowania (musi być, bo app/routers/books.py tego używa)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# 2. Override
 def override_get_db():
     try:
         db = TestingSessionLocal()
@@ -33,36 +35,34 @@ app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
-# Dane logowania
 AUTH_USERNAME = "admin"
 AUTH_PASSWORD = "secret"
 AUTH_DATA = (AUTH_USERNAME, AUTH_PASSWORD)
 
-# 3. Fixture bazy danych
+# 3. Fixture
 @pytest.fixture(autouse=True)
 def setup_db():
-    # A. Tworzymy tabele
     Base.metadata.create_all(bind=engine)
     
-    # B. Tworzymy użytkownika (BEZ HASZOWANIA - CZYSTY TEKST)
     db = TestingSessionLocal()
     try:
+        # Musimy zrobić hash, bo inaczej router wyrzuci UnknownHashError
+        hashed_password = pwd_context.hash(AUTH_PASSWORD)
+        
         user = models.User(
             username=AUTH_USERNAME,         
-            password_hash=AUTH_PASSWORD
+            password_hash=hashed_password
         )
         db.add(user)
         db.commit()
     except Exception as e:
-        print(f"DEBUG: Błąd podczas tworzenia admina: {e}")
+        print(f"DEBUG: Błąd usera: {e}")
     finally:
         db.close()
 
     yield
 
-    # C. Sprzątamy po testach
     Base.metadata.drop_all(bind=engine)
-
 
 # --- TESTY ---
 
@@ -78,21 +78,12 @@ def test_create_book():
     assert "id" in data
 
 def test_read_books():
-    # 1. Dodajemy książkę
-    create_res = client.post(
-        "/books/", 
-        json={"title": "B1", "author": "A1", "year": 2020}, 
-        auth=AUTH_DATA
-    )
-    assert create_res.status_code in [200, 201]
-
-    # 2. Pobieramy listę
+    client.post("/books/", json={"title": "B1", "author": "A1", "year": 2020}, auth=AUTH_DATA)
     response = client.get("/books/")
     assert response.status_code == 200
     assert len(response.json()) >= 1 
 
 def test_update_book():
-    # 1. Dodajemy książkę
     create_res = client.post(
         "/books/", 
         json={"title": "Old Title", "author": "Old Author", "year": 1990},
@@ -100,7 +91,6 @@ def test_update_book():
     )
     book_id = create_res.json()["id"]
 
-    # 2. Edytujemy
     response = client.put(
         f"/books/{book_id}/",
         json={"title": "New Title", "author": "Old Author", "year": 2000},
@@ -110,7 +100,6 @@ def test_update_book():
     assert response.json()["title"] == "New Title"
 
 def test_delete_book():
-    # 1. Dodajemy książkę
     create_res = client.post(
         "/books/", 
         json={"title": "To Delete", "author": "X", "year": 2021}, 
@@ -118,10 +107,8 @@ def test_delete_book():
     )
     book_id = create_res.json()["id"]
 
-    # 2. Usuwamy
     response = client.delete(f"/books/{book_id}/", auth=AUTH_DATA)
     assert response.status_code in [200, 204]
     
-    # 3. Sprawdzamy czy zniknęła
     get_res = client.get(f"/books/{book_id}/")
     assert get_res.status_code == 404
