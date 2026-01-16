@@ -35,6 +35,7 @@ services:
     container_name: projekt-prometheus
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml
     ports:
       - "9090:9090"
 
