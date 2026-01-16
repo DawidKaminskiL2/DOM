@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/books';
+const API_BASE_URL = 'http://domki.me:8000/books/';
 
 export interface Book {
   id: number;
