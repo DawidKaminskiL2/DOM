@@ -28,7 +28,9 @@ app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 # Dane do logowania
-AUTH_DATA = ("admin", "secret")
+AUTH_USERNAME = "admin"
+AUTH_PASSWORD = "secret"
+AUTH_DATA = (AUTH_USERNAME, AUTH_PASSWORD)
 
 # 3. Fixture bazy danych
 @pytest.fixture(autouse=True)
