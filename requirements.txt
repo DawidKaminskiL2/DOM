@@ -4,4 +4,8 @@ sqlalchemy
 psycopg2-binary
 jinja2
 python-dotenv
-psycopg2-binary
+passlib[bcrypt]
+bcrypt==4.0.1
+prometheus-fastapi-instrumentator
+python-multipart
+python-jose[cryptography]
