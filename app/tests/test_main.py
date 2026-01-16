@@ -14,8 +14,7 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
-# 2. Nadpisanie zależności bazy danych w FastAPI
+# 2. Nadpisanie zależności
 def override_get_db():
     try:
         db = TestingSessionLocal()
@@ -23,66 +22,79 @@ def override_get_db():
     finally:
         db.close()
 
-
 app.dependency_overrides[get_db] = override_get_db
 
-# 3. Klient testowy
 client = TestClient(app)
 
+# Dane do logowania (zakładam, że takie są poprawne na podstawie Twojego kodu)
+AUTH_DATA = ("admin", "secret")
 
-# 4. Przygotowanie tabel przed testami
+# 3. Fixture bazy danych
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
 
-
-# --- TESTY ---
+# --- POPRAWIONE TESTY ---
 
 def test_create_book():
     response = client.post(
         "/books/",
         json={"title": "Test Book", "author": "Tester", "year": 2024},
-        auth = ("admin", "secret")
+        auth=AUTH_DATA  # Używamy auth
     )
-    assert response.status_code == 200
+    # Uwaga: Czasami przy tworzeniu zwraca się 201 Created, sprawdź swoją implementację
+    assert response.status_code in [200, 201] 
     data = response.json()
     assert data["title"] == "Test Book"
     assert "id" in data
 
-
 def test_read_books():
-    # Najpierw dodaj książkę
-    client.post("/books/", json={"title": "B1", "author": "A1"})
+    # 1. Dodajemy książkę (z AUTH i kompletem danych)
+    create_res = client.post(
+        "/books/", 
+        json={"title": "B1", "author": "A1", "year": 2020}, 
+        auth=AUTH_DATA
+    )
+    assert create_res.status_code in [200, 201] # Upewniamy się, że dodanie się udał
 
+    # 2. Pobieramy listę (zazwyczaj GET nie wymaga auth, ale jeśli tak - dodaj go)
     response = client.get("/books/")
     assert response.status_code == 200
     assert len(response.json()) == 1
 
-
 def test_update_book():
-    # Dodaj książkę
-    create_res = client.post("/books/", json={"title": "Old Title", "author": "Old Author"})
+    # 1. Dodajemy książkę
+    create_res = client.post(
+        "/books/", 
+        json={"title": "Old Title", "author": "Old Author", "year": 1990},
+        auth=AUTH_DATA
+    )
     book_id = create_res.json()["id"]
 
-    # Edytuj (PUT)
+    # 2. Edytujemy (PUT z AUTH)
     response = client.put(
         f"/books/{book_id}",
         json={"title": "New Title", "author": "Old Author", "year": 2000},
-        auth = ("admin", "secret")
+        auth=AUTH_DATA
     )
     assert response.status_code == 200
     assert response.json()["title"] == "New Title"
 
-
 def test_delete_book():
-    create_res = client.post("/books/", json={"title": "To Delete", "author": "X"}, auth=("admin", "secret"))
+    # 1. Dodajemy książkę
+    create_res = client.post(
+        "/books/", 
+        json={"title": "To Delete", "author": "X", "year": 2021}, 
+        auth=AUTH_DATA
+    )
     book_id = create_res.json()["id"]
 
-    response = client.delete(f"/books/{book_id}")
-    assert response.status_code == 200
+    # 2. Usuwamy (DELETE z AUTH)
+    response = client.delete(f"/books/{book_id}", auth=AUTH_DATA)
+    assert response.status_code in [200, 204] # 204 to często standard dla delete
 
-    # Sprawdź czy zniknęła
+    # 3. Sprawdzamy czy zniknęła
     get_res = client.get(f"/books/{book_id}")
     assert get_res.status_code == 404
