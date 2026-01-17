@@ -40,13 +40,13 @@ services:
     depends_on:
       - alertmanager
 
-   alertmanager:
+  alertmanager:
     image: prom/alertmanager
     container_name: projekt-alertmanager
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     ports:
-      - "9093:9093" 
+      - "9093:9093"
 
   grafana:
     image: grafana/grafana
@@ -75,7 +75,6 @@ services:
     container_name: projekt-frontend
     ports:
       - "80:8080"
-
     depends_on:
       - app-backend
 
