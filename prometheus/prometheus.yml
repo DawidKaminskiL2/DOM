@@ -3,14 +3,18 @@ global:
 
 alerting:
   alertmanagers:
-  - static_configs:
-    - targets:
-      - 'alertmanager:9093'
+    - static_configs:
+        - targets: ['alertmanager:9093']
 
 rule_files:
   - "alert_rules.yml"
 
 scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
   - job_name: 'fastapi-app'
+    metrics_path: '/metrics'
     static_configs:
       - targets: ['app-backend:8000']
