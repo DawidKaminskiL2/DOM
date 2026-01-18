@@ -58,7 +58,7 @@ const AuthPage = () => {
 
         // 2. Weryfikujemy hasło na serwerze (endpoint /verify)
         // WAŻNE: Ten adres musi pasować do Twojego endpointu w Pythonie
-        const response = await fetch('http://localhost:8000/books/verify', {
+        const response = await fetch('http://domki.me:8000/books/verify', {
           method: 'GET',
           headers: {
             'Authorization': `Basic ${token}`,

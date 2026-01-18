@@ -9,5 +9,5 @@ route:
 receivers:
 - name: 'discord-webhook'
   discord_configs:
-  - webhook_url: '${DISCORD_WEBHOOK_URL}'
+  - webhook_url: 'https://discord.com/api/webhooks/TWOJ_ID/TWOJ_TOKEN'
     send_resolved: true

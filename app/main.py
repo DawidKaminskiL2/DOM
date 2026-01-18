@@ -1,16 +1,16 @@
 from fastapi import FastAPI, Request
-from pathlib import Path
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from app.routers import books
 from app.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
+from app.init_db import init_db
 from prometheus_fastapi_instrumentator import Instrumentator
 
+# 1. Tworzymy tabele
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="LibraryLite")
 
+# 2. CORS - pozwala frontendowi na komunikację z API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,25 +19,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BASE_DIR = Path(__file__).resolve().parent
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-
+# 3. Dodanie endpointów API
 app.include_router(books.router)
 
+# 3. Monitoring
 Instrumentator().instrument(app).expose(app)
 
-
+# 5. Inicjalizacja danych przy starcie
 @app.on_event("startup")
 async def startup_event():
-    from app.init_db import init_db
-    init_db()
-
+    try:
+        init_db()
+        print("Baza danych zainicjalizowana (sample data).")
+    except Exception as e:
+        print(f"Błąd podczas inicjalizacji bazy: {e}")
 
 @app.get("/")
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+def read_root():
+    return {"message": "LibraryLite API is running", "docs": "/docs"}
+
 
 
 if __name__ == "__main__":
