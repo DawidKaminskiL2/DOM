@@ -6,6 +6,6 @@ load_dotenv()
 
 class Settings:
     
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./data/fallback.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
 
 settings = Settings()
