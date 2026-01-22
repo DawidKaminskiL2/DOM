@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     allowedHosts: ["domki.me", "localhost"],
+    // --- TO ROZWIĄZUJE PROBLEM WIDOCZNEGO BŁĘDU ---
+    hmr: {
+      overlay: false, 
+    },
+    // ----------------------------------------------
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
